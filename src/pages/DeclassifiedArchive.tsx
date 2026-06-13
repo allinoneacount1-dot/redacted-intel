@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import { dossiers } from "../data/dossiers";
 import StampBadge from "../components/StampBadge";
+import { updateSEO, SEO_PAGES } from "../utils/seo";
 
 /* ─── types ─── */
 
@@ -160,7 +161,12 @@ const EXTENDED_DOSSIERS = [
 
 export default function DeclassifiedArchive() {
   const [filter, setFilter] = useState<FilterType>("all");
-  
+
+  // SEO
+  useState(() => {
+    updateSEO(SEO_PAGES.declassified);
+  });
+
   const filtered = useMemo(() => {
     let list = [...EXTENDED_DOSSIERS];
 
@@ -272,6 +278,18 @@ export default function DeclassifiedArchive() {
                 backgroundColor:
                   filter === f ? "rgba(208,58,43,0.06)" : "transparent",
               }}
+              onMouseEnter={(e) => {
+                if (filter !== f) {
+                  e.currentTarget.style.borderColor = "rgba(208,58,43,0.5)";
+                  e.currentTarget.style.color = "rgba(208,58,43,0.7)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filter !== f) {
+                  e.currentTarget.style.borderColor = "rgba(233,228,216,0.1)";
+                  e.currentTarget.style.color = "rgba(233,228,216,0.4)";
+                }
+              }}
             >
               {f === "all" ? "ALL" : f.toUpperCase()}
             </button>
@@ -310,7 +328,7 @@ function DossierArchiveCard({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-40px" });
-  
+
   const isPositive = d.changePct >= 0;
   const stampVariant =
     d.outcome === "VERIFIED"

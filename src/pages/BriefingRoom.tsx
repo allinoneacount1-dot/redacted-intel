@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RedactionBar from "../components/RedactionBar";
 import CountdownTimer from "../components/CountdownTimer";
+import WaitlistModal from "../components/WaitlistModal";
+import { updateSEO, SEO_PAGES } from "../utils/seo";
 
 /* ─── types ─── */
 
@@ -136,10 +138,16 @@ export default function BriefingRoom() {
   const [selectedDossier, setSelectedDossier] = useState<ActiveDossier | null>(
     null
   );
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
 
   const prefersReduced = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
+
+  // SEO
+  useEffect(() => {
+    updateSEO(SEO_PAGES.briefing);
+  }, []);
 
   const handleChipClick = useCallback(
     (chip: string) => {
@@ -181,6 +189,12 @@ export default function BriefingRoom() {
         paddingTop: "56px",
       }}
     >
+      <WaitlistModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        preselectedLevel={2}
+      />
+
       {/* Page header */}
       <header className="px-4 md:px-8 pt-10 pb-6">
         <div className="max-w-7xl mx-auto">
@@ -232,7 +246,7 @@ export default function BriefingRoom() {
               </div>
               <div className="flex items-center gap-3">
                 {CHIPS.map((chip) => (
-                  <button
+                  <motion.button
                     key={chip}
                     onClick={() => handleChipClick(chip)}
                     disabled={loading}
@@ -258,9 +272,10 @@ export default function BriefingRoom() {
                         e.currentTarget.style.color = "rgba(233,228,216,0.5)";
                       }
                     }}
+                    whileTap={{ scale: 0.97 }}
                   >
                     {chip}
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>
@@ -281,7 +296,7 @@ export default function BriefingRoom() {
             </div>
 
             {ACTIVE_DOSSIERS.map((d) => (
-              <button
+              <motion.button
                 key={d.id}
                 onClick={() => {
                   setSelectedDossier(d);
@@ -297,6 +312,7 @@ export default function BriefingRoom() {
                       ? "1px solid rgba(208,58,43,0.2)"
                       : "1px solid rgba(255,255,255,0.04)",
                 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -340,7 +356,7 @@ export default function BriefingRoom() {
                     targetHours={d.hoursRemaining}
                   />
                 </div>
-              </button>
+              </motion.button>
             ))}
           </div>
 
@@ -469,13 +485,21 @@ export default function BriefingRoom() {
                       <RedactionBar text={result.summary} />
                     </div>
 
-                    {/* Level 2 clearance banner */}
-                    <div
-                      className="p-4 flex items-center gap-3"
+                    {/* Level 2 clearance banner — now a button */}
+                    <motion.button
+                      className="w-full p-4 flex items-center gap-3 cursor-pointer text-left transition-colors duration-200"
                       style={{
                         backgroundColor: "#0C0C0C",
                         border: "1px solid rgba(208,58,43,0.3)",
                       }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(208,58,43,0.6)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(208,58,43,0.3)";
+                      }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => setWaitlistOpen(true)}
                     >
                       <div
                         className="font-['Oswald',_sans-serif] text-xs tracking-[0.2em] uppercase shrink-0"
@@ -491,7 +515,7 @@ export default function BriefingRoom() {
                         access unredacted analysis, price targets, and confidence
                         intervals.
                       </p>
-                    </div>
+                    </motion.button>
                   </motion.div>
                 )}
 

@@ -1,6 +1,8 @@
-import { useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import { MANIFESTO } from "../data/manifesto";
+import WaitlistModal from "../components/WaitlistModal";
+import { updateSEO, SEO_PAGES } from "../utils/seo";
 
 /* ═══════════════════════════════════════════════════════════════
    THE AGENCY PAGE
@@ -12,6 +14,12 @@ export default function TheAgency() {
   const prefersReduced = window.matchMedia(
     "(prefers-reduced-motion: reduce)"
   ).matches;
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+
+  // SEO
+  useEffect(() => {
+    updateSEO(SEO_PAGES.agency);
+  }, []);
 
   // Split manifesto into paragraphs for rendering
   const paragraphs = MANIFESTO.split("\n\n");
@@ -24,6 +32,11 @@ export default function TheAgency() {
         paddingTop: "56px",
       }}
     >
+      <WaitlistModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+      />
+
       {/* Page header */}
       <header className="px-4 md:px-8 pt-10 pb-6">
         <div className="max-w-4xl mx-auto">
@@ -211,6 +224,38 @@ export default function TheAgency() {
               aria-hidden="true"
             />
           </motion.article>
+
+          {/* CTA after manifesto */}
+          <motion.div
+            className="mt-12 text-center"
+            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <p
+              className="font-['Special_Elite',_monospace] text-sm mb-4"
+              style={{ color: "rgba(233,228,216,0.4)" }}
+            >
+              You've read the manifesto. The only question is whether you're
+              cleared to act on it.
+            </p>
+            <motion.button
+              className="inline-flex items-center justify-center font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase px-10 py-4 border-2 transition-colors duration-200 cursor-pointer"
+              style={{ borderColor: "#D03A2B", color: "#D03A2B" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#D03A2B";
+                e.currentTarget.style.color = "#fff";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = "#D03A2B";
+              }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setWaitlistOpen(true)}
+            >
+              REQUEST CLEARANCE
+            </motion.button>
+          </motion.div>
 
           {/* Document footer */}
           <div className="mt-8 flex items-center justify-between">

@@ -1,5 +1,11 @@
 export type Outcome = "VERIFIED" | "BURNED" | "PENDING";
 
+export interface LivePriceInfo {
+  price: number;
+  change24h: number;
+  isLive: boolean;
+}
+
 export interface Dossier {
   id: string;
   codeName: string;
@@ -13,6 +19,7 @@ export interface Dossier {
   summary: string;
   redactedSummary: string;
   readersCount: number;
+  livePrice?: LivePriceInfo;
 }
 
 export const dossiers: readonly Dossier[] = [

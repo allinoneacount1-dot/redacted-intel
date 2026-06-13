@@ -9,6 +9,7 @@ interface ClearanceCardProps {
   seatCount?: number;
   seatTotal?: number;
   highlighted?: boolean;
+  onRequestClearance?: (level: 1 | 2 | 3) => void;
 }
 
 export default function ClearanceCard({
@@ -19,6 +20,7 @@ export default function ClearanceCard({
   seatCount,
   seatTotal,
   highlighted = false,
+  onRequestClearance,
 }: ClearanceCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
@@ -149,7 +151,7 @@ export default function ClearanceCard({
       )}
 
       {/* CTA button */}
-      <button
+      <motion.button
         className="w-full py-3 font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase border-2 transition-colors duration-200 cursor-pointer"
         style={{
           borderColor: "#D03A2B",
@@ -164,9 +166,11 @@ export default function ClearanceCard({
           e.currentTarget.style.backgroundColor = "transparent";
           e.currentTarget.style.color = "#D03A2B";
         }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => onRequestClearance?.(level)}
       >
         REQUEST CLEARANCE
-      </button>
+      </motion.button>
 
       {/* Form-style field lines */}
       <div className="mt-4 pt-3" style={{ borderTop: "1px dashed #c8c0b0" }}>

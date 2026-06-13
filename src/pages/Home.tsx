@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
 import {
   LineChart,
@@ -19,8 +19,14 @@ import CountdownTimer from "../components/CountdownTimer";
 import StampBadge from "../components/StampBadge";
 
 import { intercepts } from "../data/intercepts";
-import { activityTicker } from "../data/activity";
+import WaitlistModal from "../components/WaitlistModal";
+import Toast from "../components/Toast";
+import type { ToastType } from "../components/Toast";
 
+import { activityTicker } from "../data/activity";
+import { useLivePrice, getLivePriceForSymbol } from "../hooks/useLivePrice";
+import { updateSEO, SEO_PAGES } from "../utils/seo";
+ 
 /* ─── helpers ─── */
 
 function usePrefersReducedMotion() {
@@ -194,16 +200,45 @@ function ChartTooltip({ active, payload, }: any) {
 
 export default function Home() {
   const [gateDismissed, setGateDismissed] = useState(false);
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistLevel, setWaitlistLevel] = useState<1 | 2 | 3 | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const prefersReduced = usePrefersReducedMotion();
 
+  // Live prices from CoinGecko
+  const { prices: livePrices, lastUpdated, isLive } = useLivePrice();
+
+  // SEO
+  useState(() => {
+    updateSEO(SEO_PAGES.home);
+  });
+ 
+  const openWaitlist = useCallback((level?: 1 | 2 | 3) => {
+    setWaitlistLevel(level ?? null);
+    setWaitlistOpen(true);
+  }, []);
+ 
+ 
   if (!gateDismissed) {
     return <WarningGate onProceed={() => setGateDismissed(true)} />;
   }
 
   return (
     <div style={{ backgroundColor: "#0C0C0C", minHeight: "100vh" }}>
-      {/* A. WarningGate already dismissed above */}
-
+      <WaitlistModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        preselectedLevel={waitlistLevel}
+      />
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={4000}
+          onClose={() => setToast(null)}
+        />
+      )}
+ 
       {/* B. Red scrolling top bar */}
       <RedactionTopBar />
 
@@ -211,10 +246,10 @@ export default function Home() {
       <Navbar />
 
       {/* D. Hero */}
-      <HeroSection />
+      <HeroSection onRequestClearance={openWaitlist} />
 
       {/* E. Declassified — The Receipts */}
-      <DeclassifiedSection prefersReduced={prefersReduced} />
+      <DeclassifiedSection prefersReduced={prefersReduced} livePrices={livePrices} isLive={isLive} lastUpdated={lastUpdated} />
 
       {/* F. Live Intercepts */}
       <LiveInterceptsSection />
@@ -223,13 +258,13 @@ export default function Home() {
       <HowItWorksSection />
 
       {/* H. Clearance */}
-      <ClearanceSection />
+      <ClearanceSection onRequestClearance={openWaitlist} />
 
       {/* I. Agent Activity ticker */}
       <AgentActivityStrip />
 
       {/* J. Final CTA */}
-      <FinalCTASection />
+      <FinalCTASection onRequestClearance={() => openWaitlist()} />
 
       {/* K. Footer */}
       <FooterSection />
@@ -299,7 +334,7 @@ function RedactionTopBar() {
    D. HERO SECTION
    ═══════════════════════════════════════════════════════════════ */
 
-function HeroSection() {
+function HeroSection({ onRequestClearance }: { onRequestClearance: (level?: 1 | 2 | 3) => void }) {
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const prefersReduced = usePrefersReducedMotion();
@@ -352,9 +387,8 @@ function HeroSection() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <a
-              href="#clearance"
-              className="inline-flex items-center justify-center font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase px-8 py-3.5 border-2 transition-colors duration-200"
+            <motion.button
+              className="inline-flex items-center justify-center font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase px-8 py-3.5 border-2 transition-colors duration-200 cursor-pointer"
               style={{ borderColor: "#D03A2B", color: "#D03A2B" }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "#D03A2B";
@@ -364,27 +398,32 @@ function HeroSection() {
                 e.currentTarget.style.backgroundColor = "transparent";
                 e.currentTarget.style.color = "#D03A2B";
               }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => onRequestClearance()}
             >
               REQUEST CLEARANCE
-            </a>
-            <a
-              href="#declassified"
-              className="inline-flex items-center justify-center font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase px-8 py-3.5 border transition-colors duration-200"
-              style={{
-                borderColor: "rgba(233,228,216,0.2)",
-                color: "rgba(233,228,216,0.6)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#E9E4D8";
-                e.currentTarget.style.color = "#E9E4D8";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "rgba(233,228,216,0.2)";
-                e.currentTarget.style.color = "rgba(233,228,216,0.6)";
-              }}
+            </motion.button>
+            <motion.button
+             className="inline-flex items-center justify-center font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase px-8 py-3.5 border transition-colors duration-200 cursor-pointer"
+             style={{
+               borderColor: "rgba(233,228,216,0.2)",
+               color: "rgba(233,228,216,0.6)",
+             }}
+             onMouseEnter={(e) => {
+               e.currentTarget.style.borderColor = "#E9E4D8";
+               e.currentTarget.style.color = "#E9E4D8";
+             }}
+             onMouseLeave={(e) => {
+               e.currentTarget.style.borderColor = "rgba(233,228,216,0.2)";
+               e.currentTarget.style.color = "rgba(233,228,216,0.6)";
+             }}
+             whileTap={{ scale: 0.97 }}
+             onClick={() => {
+               document.getElementById("declassified")?.scrollIntoView({ behavior: "smooth" });
+             }}
             >
-              VIEW DECLASSIFIED
-            </a>
+             VIEW DECLASSIFIED
+            </motion.button>
           </div>
         </motion.div>
 
@@ -431,7 +470,7 @@ function HeroSection() {
    E. DECLASSIFIED — THE RECEIPTS
    ═══════════════════════════════════════════════════════════════ */
 
-function DeclassifiedSection({ prefersReduced }: { prefersReduced: boolean }) {
+function DeclassifiedSection({ prefersReduced, livePrices, isLive, lastUpdated }: { prefersReduced: boolean; livePrices: Record<string, { price: number; change24h: number }>; isLive: boolean; lastUpdated: Date | null }) {
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
 
@@ -470,6 +509,20 @@ function DeclassifiedSection({ prefersReduced }: { prefersReduced: boolean }) {
             Every dossier we publish is tracked. Every outcome is recorded.
             Here are the ones that already resolved.
           </p>
+          {isLive && lastUpdated && (
+            <div className="flex items-center gap-2 mt-2">
+              <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: "#39FF6E" }}
+              />
+              <span
+                className="font-mono text-xs"
+                style={{ color: "rgba(57,255,110,0.6)" }}
+              >
+                LIVE PRICES · UPDATED {lastUpdated.toLocaleTimeString()}
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* 3 dossier cards with charts */}
@@ -511,7 +564,7 @@ function DeclassifiedSection({ prefersReduced }: { prefersReduced: boolean }) {
                 </h3>
 
                 {/* Asset + price */}
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-3 flex-wrap">
                   <span
                     className="font-['Oswald',_sans-serif] text-base tracking-wide"
                     style={{ color: "#2B2B2B" }}
@@ -526,6 +579,18 @@ function DeclassifiedSection({ prefersReduced }: { prefersReduced: boolean }) {
                       ${d.currentPrice.toLocaleString()}
                     </span>
                   </span>
+                  {(() => {
+                    const live = getLivePriceForSymbol(livePrices, d.asset);
+                    if (!live || !isLive) return null;
+                    return (
+                      <span
+                        className="font-['Oswald',_sans-serif] text-[10px] tracking-[0.15em] uppercase px-1.5 py-0.5"
+                        style={{ backgroundColor: "rgba(57,255,110,0.12)", color: "#39FF6E", border: "1px solid rgba(57,255,110,0.25)" }}
+                      >
+                        LIVE ${live.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Summary */}
@@ -784,7 +849,7 @@ function HowItWorksSection() {
    H. CLEARANCE
    ═══════════════════════════════════════════════════════════════ */
 
-function ClearanceSection() {
+function ClearanceSection({ onRequestClearance }: { onRequestClearance: (level: 1 | 2 | 3) => void }) {
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const prefersReduced = usePrefersReducedMotion();
@@ -841,7 +906,8 @@ function ClearanceSection() {
                 seatCount={tier.seatCount}
                 seatTotal={tier.seatTotal}
                 highlighted={tier.highlighted}
-              />
+                onRequestClearance={onRequestClearance}
+                />
             </motion.div>
           ))}
         </div>
@@ -877,7 +943,7 @@ function AgentActivityStrip() {
    J. FINAL CTA
    ═══════════════════════════════════════════════════════════════ */
 
-function FinalCTASection() {
+function FinalCTASection({ onRequestClearance }: { onRequestClearance: () => void }) {
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const prefersReduced = usePrefersReducedMotion();
@@ -925,9 +991,8 @@ function FinalCTASection() {
             <CountdownTimer persistKey="final-cta-countdown" targetHours={4} />
           </p>
 
-          <a
-            href="#clearance"
-            className="inline-flex items-center justify-center font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase px-10 py-4 border-2 transition-colors duration-200"
+          <motion.button
+            className="inline-flex items-center justify-center font-['Oswald',_sans-serif] text-sm tracking-[0.2em] uppercase px-10 py-4 border-2 transition-colors duration-200 cursor-pointer"
             style={{ borderColor: "#D03A2B", color: "#D03A2B" }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = "#D03A2B";
@@ -937,9 +1002,11 @@ function FinalCTASection() {
               e.currentTarget.style.backgroundColor = "transparent";
               e.currentTarget.style.color = "#D03A2B";
             }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onRequestClearance()}
           >
             REQUEST CLEARANCE
-          </a>
+          </motion.button>
         </motion.div>
       </div>
     </section>

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://redacted-chi.vercel.app/sitemap.xml

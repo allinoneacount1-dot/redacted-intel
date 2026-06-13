@@ -1,0 +1,13 @@
+{
+  "name": "[REDACTED] — Classified Crypto Intelligence",
+  "short_name": "[REDACTED]",
+  "description": "AI intelligence agency for crypto. Classified market dossiers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0C0C0C",
+  "theme_color": "#D03A2B",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
