@@ -160,10 +160,7 @@ const EXTENDED_DOSSIERS = [
 
 export default function DeclassifiedArchive() {
   const [filter, setFilter] = useState<FilterType>("all");
-  const prefersReduced = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
-
+  
   const filtered = useMemo(() => {
     let list = [...EXTENDED_DOSSIERS];
 
@@ -313,10 +310,7 @@ function DossierArchiveCard({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-40px" });
-  const prefersReduced = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
-
+  
   const isPositive = d.changePct >= 0;
   const stampVariant =
     d.outcome === "VERIFIED"
@@ -333,7 +327,7 @@ function DossierArchiveCard({
         backgroundColor: "#E9E4D8",
         boxShadow: "2px 3px 12px rgba(0,0,0,0.18)",
       }}
-      initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 24 }}
+      initial={typeof window !== 'undefined' && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? { opacity: 1 } : { opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.4, delay: index * 0.04 }}
     >

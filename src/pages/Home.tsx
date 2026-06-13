@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import {
   LineChart,
@@ -10,7 +10,6 @@ import {
 } from "recharts";
 
 import WarningGate from "../components/WarningGate";
-import RedactionBar from "../components/RedactionBar";
 import Navbar from "../components/Navbar";
 import DossierCard from "../components/DossierCard";
 import InterceptFeed from "../components/InterceptFeed";
@@ -19,7 +18,6 @@ import AgentTicker from "../components/AgentTicker";
 import CountdownTimer from "../components/CountdownTimer";
 import StampBadge from "../components/StampBadge";
 
-import { dossiers } from "../data/dossiers";
 import { intercepts } from "../data/intercepts";
 import { activityTicker } from "../data/activity";
 
@@ -178,7 +176,7 @@ const CLEARANCE_TIERS = [
 
 /* ─── custom chart tooltip ─── */
 
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div
@@ -311,7 +309,7 @@ function HeroSection() {
       ref={ref}
       className="relative flex items-center justify-center px-4 md:px-8 pt-32 pb-20 md:pb-28"
       style={{ minHeight: "100vh" }}
-      aria-label="Hero"
+      aria-="Hero"
     >
       {/* Background grid lines */}
       <div
@@ -443,7 +441,7 @@ function DeclassifiedSection({ prefersReduced }: { prefersReduced: boolean }) {
       ref={ref}
       className="relative px-4 md:px-8 py-24 md:py-32"
       style={{ backgroundColor: "#111" }}
-      aria-label="Declassified dossiers"
+      aria-="Declassified dossiers"
     >
       <div className="max-w-7xl w-full mx-auto">
         {/* Section header */}
@@ -620,7 +618,7 @@ function LiveInterceptsSection() {
       ref={ref}
       className="relative px-4 md:px-8 py-24 md:py-32"
       style={{ backgroundColor: "#0C0C0C" }}
-      aria-label="Live intercepts"
+      aria-="Live intercepts"
     >
       <div className="max-w-7xl w-full mx-auto">
         <motion.div
@@ -698,7 +696,7 @@ function HowItWorksSection() {
       ref={ref}
       className="relative px-4 md:px-8 py-24 md:py-32"
       style={{ backgroundColor: "#111" }}
-      aria-label="How the Agency works"
+      aria-="How the Agency works"
     >
       <div className="max-w-7xl w-full mx-auto">
         <motion.div
@@ -797,7 +795,7 @@ function ClearanceSection() {
       ref={ref}
       className="relative px-4 md:px-8 py-24 md:py-32"
       style={{ backgroundColor: "#0C0C0C" }}
-      aria-label="Clearance levels"
+      aria-="Clearance levels"
     >
       <div className="max-w-7xl w-full mx-auto">
         <motion.div
@@ -889,7 +887,7 @@ function FinalCTASection() {
       ref={ref}
       className="relative px-4 md:px-8 py-24 md:py-32"
       style={{ backgroundColor: "#111" }}
-      aria-label="Final call to action"
+      aria-="Final call to action"
     >
       <div className="max-w-3xl mx-auto text-center">
         <motion.div

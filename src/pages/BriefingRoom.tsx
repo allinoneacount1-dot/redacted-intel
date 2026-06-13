@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RedactionBar from "../components/RedactionBar";
 import CountdownTimer from "../components/CountdownTimer";
