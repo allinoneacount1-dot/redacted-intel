@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { useWaitlist } from './useWaitlist';
-import { supabase } from '../lib/supabase';
 
 interface WaitlistState {
   loading: boolean;
@@ -21,24 +20,26 @@ export function useWaitlistSupabase(): UseWaitlistSupabaseReturn {
 
   const submit = useCallback(
     async (email: string, level: 1 | 2 | 3) => {
-      // Run the base waitlist submission first
       await base.submit(email, level);
 
-      // If base succeeded, also save to Supabase (non-blocking for user)
+      // Lazy import Supabase only when needed (avoids build-time issues)
       try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          'https://yidevainhzdpkjwrcoaz.supabase.co',
+          'sb_publishable_9gzbHSYgPorHdmfFQzScJw_DGia32R2'
+        );
         const { error: supabaseError } = await supabase.from('waitlist').insert({
           email,
           level,
           created_at: new Date().toISOString(),
           source: 'website',
         });
-
         if (supabaseError) {
-          console.warn('[useWaitlistSupabase] Supabase insert failed (non-blocking):', supabaseError);
+          console.warn('[Supabase] Insert failed (non-blocking):', supabaseError);
         }
       } catch (err) {
-        // Gracefully handle Supabase errors — don't block the user
-        console.warn('[useWaitlistSupabase] Supabase error (non-blocking):', err);
+        console.warn('[Supabase] Error (non-blocking):', err);
       }
     },
     [base]
