@@ -4,6 +4,7 @@ import RedactionBar from "../components/RedactionBar";
 import WaitlistModal from "../components/WaitlistModal";
 import { updateSEO, SEO_PAGES } from "../utils/seo";
 import { useLiveStockPrice, STOCK_SYMBOLS } from "../hooks/useLiveStockPrice";
+import Navbar from "../components/Navbar";
 
 /* ─── types ─── */
 
@@ -259,7 +260,8 @@ export default function BriefingRoom() {
     : STOCK_SYMBOLS.map((s) => ({ symbol: s, name: s, live: liveStocks[s], loading: !stocksLive }));
 
   return (
-    <div style={{ backgroundColor: "#0C0C0C", minHeight: "100vh", paddingTop: "56px" }}>
+    <div style={{ backgroundColor: "#0C0C0C", minHeight: "100vh" }}>
+      <Navbar />
       <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} preselectedLevel={2} />
 
       <header className="px-4 md:px-8 pt-10 pb-6">

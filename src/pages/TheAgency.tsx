@@ -3,6 +3,7 @@ import { motion, useInView } from "framer-motion";
 import { manifesto } from "../data/manifesto";
 import WaitlistModal from "../components/WaitlistModal";
 import { updateSEO, SEO_PAGES } from "../utils/seo";
+import Navbar from "../components/Navbar";
 
 /* ═══════════════════════════════════════════════════════════════
    THE AGENCY PAGE
@@ -25,13 +26,8 @@ export default function TheAgency() {
   const paragraphs = manifesto.paragraphs;
 
   return (
-    <div
-      style={{
-        backgroundColor: "#0C0C0C",
-        minHeight: "100vh",
-        paddingTop: "56px",
-      }}
-    >
+    <div style={{ backgroundColor: "#0C0C0C", minHeight: "100vh" }}>
+      <Navbar />
       <WaitlistModal
         open={waitlistOpen}
         onClose={() => setWaitlistOpen(false)}

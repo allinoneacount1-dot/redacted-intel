@@ -8,6 +8,7 @@ import {
 import { dossiers } from "../data/dossiers";
 import StampBadge from "../components/StampBadge";
 import { updateSEO, SEO_PAGES } from "../utils/seo";
+import Navbar from "../components/Navbar";
 
 /* ─── types ─── */
 
@@ -68,13 +69,8 @@ export default function DeclassifiedArchive() {
   const accuracy = ((verifiedCount / totalCount) * 100).toFixed(1);
 
   return (
-    <div
-      style={{
-        backgroundColor: "#0C0C0C",
-        minHeight: "100vh",
-        paddingTop: "56px",
-      }}
-    >
+    <div style={{ backgroundColor: "#0C0C0C", minHeight: "100vh" }}>
+      <Navbar />
       {/* Page header */}
       <header className="px-4 md:px-8 pt-10 pb-6">
         <div className="max-w-7xl mx-auto">
