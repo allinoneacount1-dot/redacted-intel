@@ -1,120 +1,44 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import RedactionBar from "../components/RedactionBar";
-import CountdownTimer from "../components/CountdownTimer";
 import WaitlistModal from "../components/WaitlistModal";
 import { updateSEO, SEO_PAGES } from "../utils/seo";
+import { useLiveStockPrice, STOCK_SYMBOLS } from "../hooks/useLiveStockPrice";
 
 /* ─── types ─── */
 
-interface ActiveDossier {
-  id: string;
-  codeName: string;
-  asset: string;
-  redactedPreview: string;
-  hoursRemaining: number;
-  persistKey: string;
-}
-
 interface BriefingResult {
   asset: string;
-  direction: string;
+  assetName: string;
+  direction: "LONG" | "SHORT";
   targetPrice: number;
   currentPrice: number;
+  change24h: number;
   confidence: number;
   summary: string;
   redactedSummary: string;
+  isStock: boolean;
 }
 
-/* ─── mock data ─── */
+interface CoinData {
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+  volume24h: number;
+}
 
-const ACTIVE_DOSSIERS: ActiveDossier[] = [
-  {
-    id: "DSR-004",
-    codeName: "PALE HORIZON",
-    asset: "BTC",
-    redactedPreview:
-      "██████ accumulation thesis post-halving. Institutional ████ inflows expected to offset ████ sell pressure within 90 days.",
-    hoursRemaining: 47,
-    persistKey: "briefing-btc-countdown",
-  },
-  {
-    id: "DSR-008",
-    codeName: "SIGIL DAWN",
-    asset: "COIN",
-    redactedPreview:
-      "███████ staking revenue recovery pending ████ clarity on ████ staking classification. Legal resolution expected Q3.",
-    hoursRemaining: 23,
-    persistKey: "briefing-coin-countdown",
-  },
-  {
-    id: "DSR-010",
-    codeName: "EMBER CROWN",
-    asset: "AVGO",
-    redactedPreview:
-      "████████ custom AI ████ revenue ramp. ██████████ orders for next-gen inference chips expected to double YoY.",
-    hoursRemaining: 61,
-    persistKey: "briefing-avgo-countdown",
-  },
-  {
-    id: "DSR-011",
-    codeName: "GHOST LINE",
-    asset: "MSFT",
-    redactedPreview:
-      "████████ cloud revenue acceleration driven by ██████ enterprise adoption. Operating leverage inflection point detected in ████ segment.",
-    hoursRemaining: 12,
-    persistKey: "briefing-msft-countdown",
-  },
-  {
-    id: "DSR-012",
-    codeName: "IRON VEIL",
-    asset: "LLY",
-    redactedPreview:
-      "GLP-1 supply chain analysis indicates ██████████ constraints will persist through ████. Pricing power asymmetric to ████ estimates.",
-    hoursRemaining: 89,
-    persistKey: "briefing-lly-countdown",
-  },
-];
+/* ─── 4 crypto assets ─── */
 
-const CHIPS = ["BTC", "ETH", "SOL"] as const;
+const CRYPTO_ASSETS = [
+  { symbol: "BTC", name: "Bitcoin", geckoId: "bitcoin" },
+  { symbol: "ETH", name: "Ethereum", geckoId: "ethereum" },
+  { symbol: "SOL", name: "Solana", geckoId: "solana" },
+  { symbol: "BNB", name: "BNB", geckoId: "binancecoin" },
+] as const;
 
-const MOCK_RESPONSES: Record<string, BriefingResult> = {
-  BTC: {
-    asset: "BTC",
-    direction: "LONG",
-    targetPrice: 74500,
-    currentPrice: 68400,
-    confidence: 72,
-    summary:
-      "Bitcoin accumulation thesis post-halving. Institutional ETF inflows expected to offset miner sell pressure within 90 days. On-chain data shows whale wallets increasing positions by 12% over the past 14 days. Historical post-halving cycles indicate a 60-90 day lag before price discovery accelerates.",
-    redactedSummary:
-      "██████ accumulation thesis post-halving. Institutional ████ inflows expected to offset ████ sell pressure within 90 days. On-chain data shows ████ wallets increasing positions by 12% over the past 14 days. Historical post-halving cycles indicate a 60-90 day lag before price discovery accelerates.",
-  },
-  ETH: {
-    asset: "ETH",
-    direction: "SHORT",
-    targetPrice: 2850,
-    currentPrice: 3120,
-    confidence: 64,
-    summary:
-      "Ethereum L2 fee compression thesis failed. Sequencer revenue declined as activity migrated to competing L1s. TVL on major L2s dropped 18% in 30 days. Validator exit queue increasing. Staking yield compression reducing institutional demand.",
-    redactedSummary:
-      "████████ L2 fee compression thesis failed. ██████████ revenue declined as activity migrated to competing L1s. ████ on major L2s dropped 18% in 30 days. Validator exit queue increasing. Staking yield compression reducing institutional demand.",
-  },
-  SOL: {
-    asset: "SOL",
-    direction: "LONG",
-    targetPrice: 185,
-    currentPrice: 148,
-    confidence: 81,
-    summary:
-      "Solana network activity surging. DeFi TVL up 40% QoQ. Firedancer validator client approaching mainnet launch, expected to increase throughput 10x. Memecoin activity driving fee revenue to all-time highs. Developer ecosystem growing faster than any L1.",
-    redactedSummary:
-      "██████ network activity surging. ████ TVL up 40% QoQ. ████████ validator client approaching mainnet launch, expected to increase throughput 10x. ████████ activity driving fee revenue to all-time highs. Developer ecosystem growing faster than any L1.",
-  },
-};
-
-/* ─── loading sequence lines ─── */
+/* ─── loading sequence ─── */
 
 const LOADING_LINES = [
   "ESTABLISHING SECURE CHANNEL...",
@@ -126,6 +50,120 @@ const LOADING_LINES = [
   "COMPILING DOSSIER...",
 ];
 
+/* ─── stock narratives ─── */
+
+const STOCK_NARRATIVES: Record<string, { bull: string; bear: string }> = {
+  AAPL: {
+    bull: "iPhone cycle acceleration detected. Services revenue hitting new highs. China demand stabilizing after Q3 weakness. Capital return program expanding. Assessment: institutional accumulation phase.",
+    bear: "Regulatory pressure in EU and US intensifying. China market share erosion to Huawei continuing. Services growth decelerating. Valuation stretched relative to earnings trajectory.",
+  },
+  TSLA: {
+    bull: "FSD adoption accelerating. Energy storage business scaling faster than expected. Robotaxi pilot expansion. Margin recovery in progress. Assessment: inflection point approaching.",
+    bear: "Competition from BYD and legacy OEMs intensifying. FSD timeline repeatedly delayed. Margin pressure from price cuts continuing. CEO distraction risk elevated.",
+  },
+  NVDA: {
+    bull: "AI datacenter demand exceeding supply. Blackwell ramp accelerating. Enterprise adoption expanding. Software ecosystem moat widening. Assessment: structural growth thesis intact.",
+    bear: "Customer concentration risk — top 4 hyperscalers 40%+ of revenue. China export restrictions impacting. Competition from custom ASICs growing. Valuation pricing perfection.",
+  },
+  MSFT: {
+    bull: "Azure AI revenue run-rate accelerating. Copilot enterprise adoption exceeding targets. Gaming integration progressing. Cloud market share gains continuing. Assessment: diversified growth engine.",
+    bear: "Regulatory scrutiny increasing globally. Cloud growth deceleration concerns. AI monetization timeline uncertain. Valuation at premium to historical range.",
+  },
+  GOOGL: {
+    bull: "Search revenue resilient despite AI overview rollout. YouTube monetization improving. Cloud profitability expanding. Waymo commercialization progressing. Assessment: undervalued relative to AI optionality.",
+    bear: "Search market share pressure from AI competitors. Antitrust ruling impact uncertain. Cloud competition intensifying. Capital expenditure surge pressuring margins.",
+  },
+  AMZN: {
+    bull: "AWS margin expansion continuing. Advertising revenue growing 20%+. Logistics efficiency gains. International profitability improving. Assessment: earnings power underestimated.",
+    bear: "Consumer spending softness impacting retail. AWS growth deceleration. Regulatory pressure increasing. Capital expenditure elevated.",
+  },
+  META: {
+    bull: "AI-driven ad targeting improving ROI. Reels monetization accelerating. Reality Labs losses narrowing. Capital return expanding. Assessment: AI flywheel gaining momentum.",
+    bear: "Reality Labs burn rate persistent. Regulatory headwinds in EU. Teen user engagement declining. Competition from TikTok intensifying.",
+  },
+  AMD: {
+    bull: "MI300X datacenter GPU ramp accelerating. Hyperscaler design wins expanding. Embedded segment recovering. Assessment: market share gain trajectory intact.",
+    bear: "NVIDIA dominance persistent. China export restrictions impacting. Datacenter competition intensifying. Valuation pricing aggressive growth.",
+  },
+  JPM: {
+    bull: "Net interest income stabilization. Investment banking fee recovery. Credit quality resilient. Capital return elevated. Assessment: best-in-class operator.",
+    bear: "Commercial real estate exposure concern. Regulatory capital requirements increasing. Economic slowdown risk. Fee income cyclicality.",
+  },
+  XOM: {
+    bull: "Permian basin production growth continuing. Refining margins strong. Capital discipline maintained. Shareholder returns elevated. Assessment: cash flow machine.",
+    bear: "Energy transition risk long-term. Crude price volatility. Capital expenditure requirements. Regulatory pressure on fossil fuels.",
+  },
+};
+
+/* ─── generate briefing from live data ─── */
+
+function generateCryptoBriefing(coin: CoinData): BriefingResult {
+  const { symbol, name, price, change24h } = coin;
+  const seed = Math.floor(price * 100) % 100;
+  const direction: "LONG" | "SHORT" = change24h > -1.5 ? "LONG" : "SHORT";
+  const magnitude = 0.05 + (seed % 10) / 100;
+  const targetPrice = direction === "LONG" ? price * (1 + magnitude) : price * (1 - magnitude);
+  const confidence = 55 + (seed % 37);
+
+  const narratives: Record<string, { summary: string; redacted: string }> = {
+    BTC: {
+      summary: `Bitcoin ${direction === "LONG" ? "accumulation" : "distribution"} pattern detected. 24h momentum: ${change24h.toFixed(2)}%. ${direction === "LONG" ? "Institutional ETF inflows persisting. Whale wallets increasing positions." : "Miner sell pressure increasing. Exchange inflows rising."} On-chain data suggests ${direction === "LONG" ? "upside" : "downside"} continuation within 5-14 day window. Target: $${targetPrice.toLocaleString("en-US", { maximumFractionDigits: 2 })}.`,
+      redacted: `██████ ${direction === "LONG" ? "accumulation" : "distribution"} pattern detected. 24h momentum: █.██%. ${direction === "LONG" ? "Institutional ████ inflows persisting." : "████ sell pressure increasing."} On-chain data suggests ${direction === "LONG" ? "upside" : "downside"} continuation within █-██ day window.`,
+    },
+    ETH: {
+      summary: `Ethereum ${direction === "LONG" ? "supply squeeze" : "weakness"} thesis. 24h: ${change24h.toFixed(2)}%. ${direction === "LONG" ? "Exchange reserves declining. Staking inflows accelerating. L2 activity driving fee burn." : "Validator exit queue growing. L2 migration reducing mainnet fee revenue."} Assessment: ${direction === "LONG" ? "upside" : "downside"} dislocation within 5 sessions. Target: $${targetPrice.toLocaleString("en-US", { maximumFractionDigits: 2 })}.`,
+      redacted: `████████ ${direction === "LONG" ? "supply squeeze" : "weakness"} thesis. 24h: █.██%. ${direction === "LONG" ? "Exchange reserves declining." : "Validator exit queue growing."} Assessment: ${direction === "LONG" ? "upside" : "downside"} dislocation within 5 sessions.`,
+    },
+    SOL: {
+      summary: `Solana network ${direction === "LONG" ? "momentum" : "exhaustion"} signal. 24h: ${change24h.toFixed(2)}%. ${direction === "LONG" ? "DeFi TVL expanding. Firedancer client approaching mainnet. Memecoin activity driving fee revenue." : "Network congestion concerns resurfacing. Validator profit margins compressing."} Assessment: ${direction === "LONG" ? "upside" : "downside"} move probable. Target: $${targetPrice.toLocaleString("en-US", { maximumFractionDigits: 2 })}.`,
+      redacted: `██████ network ${direction === "LONG" ? "momentum" : "exhaustion"} signal. 24h: █.██%. ${direction === "LONG" ? "████ TVL expanding." : "Network congestion concerns resurfacing."} Assessment: ${direction === "LONG" ? "upside" : "downside"} move probable.`,
+    },
+    BNB: {
+      summary: `BNB ${direction === "LONG" ? "bullish" : "bearish"} structure. 24h: ${change24h.toFixed(2)}%. ${direction === "LONG" ? "Token burn mechanism accelerating. BSC ecosystem TVL recovering." : "Regulatory headwinds persisting. BSC ecosystem growth stagnating."} Assessment: ${direction === "LONG" ? "upside" : "downside"} bias, 1-2 week horizon. Target: $${targetPrice.toLocaleString("en-US", { maximumFractionDigits: 2 })}.`,
+      redacted: `████ ${direction === "LONG" ? "bullish" : "bearish"} structure. 24h: █.██%. ${direction === "LONG" ? "Token burn mechanism accelerating." : "Regulatory headwinds persisting."} Assessment: ${direction === "LONG" ? "upside" : "downside"} bias, 1-2 week horizon.`,
+    },
+  };
+
+  const narrative = narratives[symbol] || narratives.BTC;
+
+  return {
+    asset: symbol,
+    assetName: name,
+    direction,
+    targetPrice: Number(targetPrice.toFixed(2)),
+    currentPrice: price,
+    change24h,
+    confidence,
+    summary: narrative.summary,
+    redactedSummary: narrative.redacted,
+    isStock: false,
+  };
+}
+
+function generateStockBriefing(symbol: string, price: number, change24h: number): BriefingResult {
+  const seed = Math.floor(price * 100) % 100;
+  const direction: "LONG" | "SHORT" = change24h > -1.0 ? "LONG" : "SHORT";
+  const magnitude = 0.04 + (seed % 8) / 100;
+  const targetPrice = direction === "LONG" ? price * (1 + magnitude) : price * (1 - magnitude);
+  const confidence = 52 + (seed % 40);
+
+  const narrative = STOCK_NARRATIVES[symbol] || { bull: "Positive momentum detected.", bear: "Negative pressure building." };
+  const story = direction === "LONG" ? narrative.bull : narrative.bear;
+
+  return {
+    asset: symbol,
+    assetName: symbol,
+    direction,
+    targetPrice: Number(targetPrice.toFixed(2)),
+    currentPrice: price,
+    change24h,
+    confidence,
+    summary: `${story} 24h change: ${change24h.toFixed(2)}%. Target: $${targetPrice.toLocaleString("en-US", { maximumFractionDigits: 2 })}.`,
+    redactedSummary: `${story.replace(/[A-Z]{2,}/g, "████")} 24h change: █.██%.`,
+    isStock: true,
+  };
+}
+
 /* ═══════════════════════════════════════════════════════════════
    BRIEFING ROOM PAGE
    ═══════════════════════════════════════════════════════════════ */
@@ -135,19 +173,54 @@ export default function BriefingRoom() {
   const [loading, setLoading] = useState(false);
   const [loadingLineIndex, setLoadingLineIndex] = useState(0);
   const [result, setResult] = useState<BriefingResult | null>(null);
-  const [selectedDossier, setSelectedDossier] = useState<ActiveDossier | null>(
-    null
-  );
   const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [liveCrypto, setLiveCrypto] = useState<Record<string, CoinData>>({});
+  const [cryptoLoading, setCryptoLoading] = useState(true);
+  const [lastFetch, setLastFetch] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<"crypto" | "stocks">("crypto");
 
-  const prefersReduced = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
+  const { prices: liveStocks, isLive: stocksLive } = useLiveStockPrice();
 
-  // SEO
   useEffect(() => {
     updateSEO(SEO_PAGES.briefing);
   }, []);
+
+  // Fetch live crypto prices
+  const fetchCryptoPrices = useCallback(async () => {
+    try {
+      const ids = CRYPTO_ASSETS.map((a) => a.geckoId).join(",");
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      const data = await res.json();
+
+      const mapped: Record<string, CoinData> = {};
+      for (const asset of CRYPTO_ASSETS) {
+        const info = data[asset.geckoId];
+        if (info) {
+          mapped[asset.symbol] = {
+            symbol: asset.symbol,
+            name: asset.name,
+            price: info.usd,
+            change24h: info.usd_24h_change ?? 0,
+            marketCap: info.usd_market_cap ?? 0,
+            volume24h: info.usd_24h_vol ?? 0,
+          };
+        }
+      }
+      setLiveCrypto(mapped);
+      setLastFetch(new Date());
+      setCryptoLoading(false);
+    } catch {
+      setCryptoLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCryptoPrices();
+    const interval = setInterval(fetchCryptoPrices, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchCryptoPrices]);
 
   const handleChipClick = useCallback(
     (chip: string) => {
@@ -160,121 +233,118 @@ export default function BriefingRoom() {
     [loading]
   );
 
-  // Loading sequence
   useEffect(() => {
     if (!loading) return;
-
     if (loadingLineIndex < LOADING_LINES.length) {
-      const timeout = setTimeout(() => {
-        setLoadingLineIndex((prev) => prev + 1);
-      }, 350);
+      const timeout = setTimeout(() => setLoadingLineIndex((p) => p + 1), 350);
       return () => clearTimeout(timeout);
     } else {
-      // Loading complete
       const timeout = setTimeout(() => {
         if (selectedChip) {
-          setResult(MOCK_RESPONSES[selectedChip] || null);
+          if (liveCrypto[selectedChip]) {
+            setResult(generateCryptoBriefing(liveCrypto[selectedChip]));
+          } else if (liveStocks[selectedChip]) {
+            const s = liveStocks[selectedChip];
+            setResult(generateStockBriefing(s.symbol, s.price, s.change24h));
+          }
         }
         setLoading(false);
       }, 400);
       return () => clearTimeout(timeout);
     }
-  }, [loading, loadingLineIndex, selectedChip]);
+  }, [loading, loadingLineIndex, selectedChip, liveCrypto, liveStocks]);
+
+  const allChips = activeTab === "crypto"
+    ? CRYPTO_ASSETS.map((a) => ({ symbol: a.symbol, name: a.name, live: liveCrypto[a.symbol], loading: cryptoLoading }))
+    : STOCK_SYMBOLS.map((s) => ({ symbol: s, name: s, live: liveStocks[s], loading: !stocksLive }));
 
   return (
-    <div
-      style={{
-        backgroundColor: "#0C0C0C",
-        minHeight: "100vh",
-        paddingTop: "56px",
-      }}
-    >
-      <WaitlistModal
-        open={waitlistOpen}
-        onClose={() => setWaitlistOpen(false)}
-        preselectedLevel={2}
-      />
+    <div style={{ backgroundColor: "#0C0C0C", minHeight: "100vh", paddingTop: "56px" }}>
+      <WaitlistModal open={waitlistOpen} onClose={() => setWaitlistOpen(false)} preselectedLevel={2} />
 
-      {/* Page header */}
       <header className="px-4 md:px-8 pt-10 pb-6">
         <div className="max-w-7xl mx-auto">
-          <div
-            className="font-mono text-xs tracking-[0.3em] uppercase mb-2"
-            style={{ color: "#D03A2B" }}
-          >
-            BRIEFING ROOM
-          </div>
-          <h1
-            className="font-['Oswald',_sans-serif] text-3xl md:text-4xl tracking-wide uppercase"
-            style={{ color: "#E9E4D8" }}
-          >
-            Desk View.
-          </h1>
-          <p
-            className="font-['Special_Elite',_monospace] text-sm mt-2 max-w-lg"
-            style={{ color: "rgba(233,228,216,0.4)" }}
-          >
-            Active dossiers on the left. Open briefing on the right. Select an
-            asset to task the Agency.
+          <div className="font-mono text-xs tracking-[0.3em] uppercase mb-2" style={{ color: "#D03A2B" }}>BRIEFING ROOM</div>
+          <h1 className="font-['Oswald',_sans-serif] text-3xl md:text-4xl tracking-wide uppercase" style={{ color: "#E9E4D8" }}>Desk View.</h1>
+          <p className="font-['Special_Elite',_monospace] text-sm mt-2 max-w-lg" style={{ color: "rgba(233,228,216,0.4)" }}>
+            Select an asset to task the Agency. Live data from CoinGecko + Yahoo Finance.
+            {lastFetch && <span style={{ color: "rgba(233,228,216,0.2)" }}> · Updated {lastFetch.toLocaleTimeString()}</span>}
           </p>
         </div>
       </header>
 
-      {/* TASK THE AGENCY input */}
+      {/* TASK THE AGENCY */}
       <div className="px-4 md:px-8 pb-8">
         <div className="max-w-7xl mx-auto">
-          <div
-            className="p-4 md:p-6"
-            style={{
-              backgroundColor: "#111",
-              border: "1px solid rgba(57,255,110,0.08)",
-            }}
-          >
-            <div
-              className="font-['Oswald',_sans-serif] text-xs tracking-[0.3em] uppercase mb-4"
-              style={{ color: "rgba(233,228,216,0.4)" }}
-            >
-              TASK THE AGENCY
+          <div className="p-4 md:p-6" style={{ backgroundColor: "#111", border: "1px solid rgba(57,255,110,0.08)" }}>
+            <div className="font-['Oswald',_sans-serif] text-xs tracking-[0.3em] uppercase mb-4" style={{ color: "rgba(233,228,216,0.4)" }}>TASK THE AGENCY</div>
+
+            {/* Tab switcher */}
+            <div className="flex items-center gap-2 mb-4">
+              <button
+                onClick={() => { setActiveTab("crypto"); setSelectedChip(null); setResult(null); }}
+                className="font-['Oswald',_sans-serif] text-xs tracking-[0.2em] uppercase px-4 py-2 border transition-all cursor-pointer"
+                style={{
+                  borderColor: activeTab === "crypto" ? "#39FF6E" : "rgba(233,228,216,0.1)",
+                  color: activeTab === "crypto" ? "#39FF6E" : "rgba(233,228,216,0.4)",
+                  backgroundColor: activeTab === "crypto" ? "rgba(57,255,110,0.04)" : "transparent",
+                }}
+              >
+                CRYPTO
+              </button>
+              <button
+                onClick={() => { setActiveTab("stocks"); setSelectedChip(null); setResult(null); }}
+                className="font-['Oswald',_sans-serif] text-xs tracking-[0.2em] uppercase px-4 py-2 border transition-all cursor-pointer"
+                style={{
+                  borderColor: activeTab === "stocks" ? "#39FF6E" : "rgba(233,228,216,0.1)",
+                  color: activeTab === "stocks" ? "#39FF6E" : "rgba(233,228,216,0.4)",
+                  backgroundColor: activeTab === "stocks" ? "rgba(57,255,110,0.04)" : "transparent",
+                }}
+              >
+                STOCKS
+              </button>
+              {stocksLive && activeTab === "stocks" && (
+                <span className="font-mono text-[10px] ml-2" style={{ color: "#39FF6E" }}>● LIVE</span>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div
-                className="font-['Special_Elite',_monospace] text-sm"
-                style={{ color: "#E9E4D8" }}
-              >
-                SELECT ASSET:
+              <div className="font-['Special_Elite',_monospace] text-sm" style={{ color: "#E9E4D8" }}>
+                {activeTab === "crypto" ? "SELECT CRYPTO:" : "SELECT STOCK:"}
               </div>
-              <div className="flex items-center gap-3">
-                {CHIPS.map((chip) => (
+              <div className="flex flex-wrap items-center gap-2">
+                {allChips.map((item) => (
                   <motion.button
-                    key={chip}
-                    onClick={() => handleChipClick(chip)}
+                    key={item.symbol}
+                    onClick={() => handleChipClick(item.symbol)}
                     disabled={loading}
-                    className="font-['Oswald',_sans-serif] text-xs tracking-[0.2em] uppercase px-5 py-2.5 border transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="relative font-['Oswald',_sans-serif] text-xs tracking-[0.15em] uppercase px-4 py-2 border transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     style={{
-                      borderColor:
-                        selectedChip === chip ? "#39FF6E" : "rgba(233,228,216,0.15)",
-                      color: selectedChip === chip ? "#39FF6E" : "rgba(233,228,216,0.5)",
-                      backgroundColor:
-                        selectedChip === chip
-                          ? "rgba(57,255,110,0.06)"
-                          : "transparent",
+                      borderColor: selectedChip === item.symbol ? "#39FF6E" : "rgba(233,228,216,0.12)",
+                      color: selectedChip === item.symbol ? "#39FF6E" : "rgba(233,228,216,0.5)",
+                      backgroundColor: selectedChip === item.symbol ? "rgba(57,255,110,0.06)" : "transparent",
                     }}
                     onMouseEnter={(e) => {
-                      if (!loading && selectedChip !== chip) {
+                      if (!loading && selectedChip !== item.symbol) {
                         e.currentTarget.style.borderColor = "#39FF6E";
                         e.currentTarget.style.color = "#39FF6E";
                       }
                     }}
                     onMouseLeave={(e) => {
-                      if (selectedChip !== chip) {
-                        e.currentTarget.style.borderColor = "rgba(233,228,216,0.15)";
+                      if (selectedChip !== item.symbol) {
+                        e.currentTarget.style.borderColor = "rgba(233,228,216,0.12)";
                         e.currentTarget.style.color = "rgba(233,228,216,0.5)";
                       }
                     }}
                     whileTap={{ scale: 0.97 }}
                   >
-                    {chip}
+                    {item.symbol}
+                    {item.live && (
+                      <span className="block font-mono text-[9px] tracking-normal mt-0.5" style={{ color: item.live.change24h >= 0 ? "#39FF6E" : "#D03A2B" }}>
+                        ${item.live.price.toLocaleString("en-US", { maximumFractionDigits: item.live.price < 1 ? 4 : item.live.price < 100 ? 2 : 0 })}
+                        <span className="ml-1">({item.live.change24h >= 0 ? "+" : ""}{item.live.change24h.toFixed(2)}%)</span>
+                      </span>
+                    )}
                   </motion.button>
                 ))}
               </div>
@@ -283,323 +353,133 @@ export default function BriefingRoom() {
         </div>
       </div>
 
-      {/* Desk-view layout: active dossiers (left) + open dossier (right) */}
+      {/* Desk-view layout */}
       <div className="px-4 md:px-8 pb-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Left: active dossier list */}
+          {/* Left: asset overview */}
           <div className="lg:col-span-2 space-y-3">
-            <div
-              className="font-['Oswald',_sans-serif] text-xs tracking-[0.3em] uppercase mb-4"
-              style={{ color: "rgba(233,228,216,0.3)" }}
-            >
-              ACTIVE DOSSIERS ({ACTIVE_DOSSIERS.length})
+            <div className="font-['Oswald',_sans-serif] text-xs tracking-[0.3em] uppercase mb-4" style={{ color: "rgba(233,228,216,0.3)" }}>
+              LIVE MARKET DATA
             </div>
-
-            {ACTIVE_DOSSIERS.map((d) => (
+            {allChips.map((item) => (
               <motion.button
-                key={d.id}
-                onClick={() => {
-                  setSelectedDossier(d);
-                  setResult(null);
-                  setSelectedChip(null);
-                }}
-                className="w-full text-left p-4 transition-colors duration-200 cursor-pointer"
+                key={item.symbol}
+                onClick={() => handleChipClick(item.symbol)}
+                disabled={loading}
+                className="w-full text-left p-4 transition-colors duration-200 cursor-pointer disabled:opacity-50"
                 style={{
-                  backgroundColor:
-                    selectedDossier?.id === d.id ? "rgba(208,58,43,0.08)" : "#111",
-                  border:
-                    selectedDossier?.id === d.id
-                      ? "1px solid rgba(208,58,43,0.2)"
-                      : "1px solid rgba(255,255,255,0.04)",
+                  backgroundColor: selectedChip === item.symbol ? "rgba(57,255,110,0.04)" : "#111",
+                  border: selectedChip === item.symbol ? "1px solid rgba(57,255,110,0.15)" : "1px solid rgba(255,255,255,0.04)",
                 }}
                 whileTap={{ scale: 0.99 }}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="font-['Oswald',_sans-serif] text-sm tracking-wider uppercase"
-                      style={{ color: "#E9E4D8" }}
-                    >
-                      {d.codeName}
-                    </span>
-                    <span
-                      className="font-mono text-xs"
-                      style={{ color: "rgba(233,228,216,0.3)" }}
-                    >
-                      {d.asset}
-                    </span>
+                    <span className="font-['Oswald',_sans-serif] text-sm tracking-wider uppercase" style={{ color: "#E9E4D8" }}>{item.symbol}</span>
+                    <span className="font-mono text-xs" style={{ color: "rgba(233,228,216,0.3)" }}>{item.name}</span>
                   </div>
-                  <span
-                    className="font-mono text-xs"
-                    style={{ color: "rgba(233,228,216,0.2)" }}
-                  >
-                    {d.id}
-                  </span>
+                  {item.live && (
+                    <span className="font-mono text-xs px-2 py-0.5" style={{ color: item.live.change24h >= 0 ? "#39FF6E" : "#D03A2B", backgroundColor: item.live.change24h >= 0 ? "rgba(57,255,110,0.06)" : "rgba(208,58,43,0.06)" }}>
+                      {item.live.change24h >= 0 ? "+" : ""}{item.live.change24h.toFixed(2)}%
+                    </span>
+                  )}
                 </div>
-
-                <p
-                  className="font-['Special_Elite',_monospace] text-xs leading-relaxed mb-2"
-                  style={{ color: "rgba(233,228,216,0.35)" }}
-                >
-                  <RedactionBar text={d.redactedPreview} />
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <span
-                    className="font-mono text-xs"
-                    style={{ color: "rgba(233,228,216,0.25)" }}
-                  >
-                    DECLASSIFIES IN:
-                  </span>
-                  <CountdownTimer
-                    persistKey={d.persistKey}
-                    targetHours={d.hoursRemaining}
-                  />
-                </div>
+                {item.live ? (
+                  <div className="font-['Special_Elite',_monospace] text-xs">
+                    <span style={{ color: "rgba(233,228,216,0.6)" }}>
+                      ${item.live.price.toLocaleString("en-US", { maximumFractionDigits: item.live.price < 1 ? 4 : item.live.price < 100 ? 2 : 0 })}
+                    </span>
+                    {activeTab === "crypto" && (item.live as CoinData).marketCap && (
+                      <>
+                        <span className="ml-3" style={{ color: "rgba(233,228,216,0.25)" }}>MCap: ${((item.live as CoinData).marketCap / 1e9).toFixed(1)}B</span>
+                        <span className="ml-3" style={{ color: "rgba(233,228,216,0.25)" }}>Vol: ${((item.live as CoinData).volume24h / 1e6).toFixed(0)}M</span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="font-['Special_Elite',_monospace] text-xs" style={{ color: "rgba(233,228,216,0.2)" }}>
+                    {item.loading ? "LOADING..." : "DATA UNAVAILABLE"}
+                  </div>
+                )}
               </motion.button>
             ))}
           </div>
 
-          {/* Right: open dossier / result */}
+          {/* Right: briefing result */}
           <div className="lg:col-span-3">
-            <div
-              className="sticky top-24 min-h-[400px] p-6 md:p-8"
-              style={{
-                backgroundColor: "#E9E4D8",
-                boxShadow: "2px 3px 12px rgba(0,0,0,0.18)",
-              }}
-            >
-              {/* Classification header */}
-              <div
-                className="px-4 py-2 -mx-6 md:-mx-8 -mt-6 md:-mt-8 mb-6 flex items-center justify-between"
-                style={{ backgroundColor: "#D03A2B" }}
-              >
-                <span className="font-['Oswald',_sans-serif] text-xs tracking-[0.3em] text-white uppercase">
-                  {loading ? "PROCESSING" : result ? "BRIEFING" : "PENDING"}
-                </span>
-                <span className="font-mono text-xs text-white/70">
-                  {result ? `ASSET: ${result.asset}` : "AWAITING INPUT"}
-                </span>
-              </div>
+            <div className="font-['Oswald',_sans-serif] text-xs tracking-[0.3em] uppercase mb-4" style={{ color: "rgba(233,228,216,0.3)" }}>BRIEFING RESULT</div>
 
-              <AnimatePresence mode="wait">
-                {/* Loading state */}
-                {loading && (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <div
-                      className="font-mono text-sm leading-relaxed space-y-1"
-                      style={{ color: "#2B2B2B" }}
-                    >
-                      {LOADING_LINES.slice(0, loadingLineIndex).map((line, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.15 }}
-                        >
-                          <span style={{ color: "#39FF6E" }}>&gt;</span> {line}
-                        </motion.div>
-                      ))}
-                      {loadingLineIndex < LOADING_LINES.length && (
-                        <div style={{ color: "#39FF6E" }}>
-                          &gt;{" "}
-                          <span
-                            className="inline-block w-2 h-4 ml-0.5 align-middle"
-                            style={{ backgroundColor: "#39FF6E" }}
-                          >
-                            &nbsp;
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
+            <AnimatePresence mode="wait">
+              {loading && (
+                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-6" style={{ backgroundColor: "#111", border: "1px solid rgba(57,255,110,0.08)" }}>
+                  <div className="space-y-2">
+                    {LOADING_LINES.slice(0, loadingLineIndex + 1).map((line, i) => (
+                      <div key={i} className="font-['Special_Elite',_monospace] text-xs" style={{ color: i === loadingLineIndex ? "#39FF6E" : "rgba(57,255,110,0.3)" }}>{line}</div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
 
-                {/* Result state */}
-                {result && !loading && (
-                  <motion.div
-                    key="result"
-                    initial={
-                      prefersReduced ? { opacity: 1 } : { opacity: 0, y: 20 }
-                    }
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    {/* Direction + asset */}
-                    <div className="flex items-baseline gap-3 mb-1">
-                      <h2
-                        className="font-['Oswald',_sans-serif] text-2xl tracking-wider uppercase"
-                        style={{ color: "#2B2B2B" }}
-                      >
-                        {result.asset}
-                      </h2>
-                      <span
-                        className="font-['Oswald',_sans-serif] text-sm tracking-wider uppercase px-2 py-0.5"
-                        style={{
-                          backgroundColor:
-                            result.direction === "LONG" ? "#39FF6E" : "#D03A2B",
-                          color: "#0C0C0C",
-                        }}
-                      >
+              {result && !loading && (
+                <motion.div key="result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="p-6" style={{ backgroundColor: "#111", border: result.direction === "LONG" ? "1px solid rgba(57,255,110,0.15)" : "1px solid rgba(208,58,43,0.15)" }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="font-['Oswald',_sans-serif] text-lg tracking-wider uppercase" style={{ color: "#E9E4D8" }}>{result.asset}</span>
+                      <span className="font-mono text-[10px] tracking-wider uppercase px-2 py-0.5" style={{ color: "rgba(233,228,216,0.3)", backgroundColor: "rgba(255,255,255,0.04)" }}>
+                        {result.isStock ? "EQUITY" : "CRYPTO"}
+                      </span>
+                      <span className="font-['Oswald',_sans-serif] text-xs tracking-[0.2em] uppercase px-3 py-1" style={{ color: result.direction === "LONG" ? "#39FF6E" : "#D03A2B", backgroundColor: result.direction === "LONG" ? "rgba(57,255,110,0.06)" : "rgba(208,58,43,0.06)", border: `1px solid ${result.direction === "LONG" ? "rgba(57,255,110,0.2)" : "rgba(208,58,43,0.2)"}` }}>
                         {result.direction}
                       </span>
                     </div>
-
-                    {/* Price info */}
-                    <div className="flex items-center gap-4 mb-4">
-                      <span className="font-mono text-sm" style={{ color: "#555" }}>
-                        CURRENT: ${result.currentPrice.toLocaleString()}
-                      </span>
-                      <span className="font-mono text-sm" style={{ color: "#555" }}>
-                        TARGET: ${result.targetPrice.toLocaleString()}
-                      </span>
-                      <span
-                        className="font-mono text-sm"
-                        style={{
-                          color:
-                            result.direction === "LONG" ? "#39FF6E" : "#D03A2B",
-                        }}
-                      >
-                        CONFIDENCE: {result.confidence}%
-                      </span>
+                    <div className="text-right">
+                      <div className="font-mono text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(233,228,216,0.3)" }}>CONFIDENCE</div>
+                      <div className="font-['Oswald',_sans-serif] text-lg" style={{ color: result.confidence >= 75 ? "#39FF6E" : result.confidence >= 60 ? "#FFB800" : "#D03A2B" }}>{result.confidence}%</div>
                     </div>
+                  </div>
 
-                    {/* Divider */}
-                    <div
-                      className="w-full h-px mb-4"
-                      style={{ backgroundColor: "#c8c0b0" }}
-                    />
-
-                    {/* Summary — half redacted */}
-                    <div
-                      className="font-['Special_Elite',_monospace] text-sm leading-relaxed mb-6"
-                      style={{ color: "#2B2B2B" }}
-                    >
-                      <RedactionBar text={result.summary} />
+                  <div className="grid grid-cols-3 gap-4 mb-4 p-3" style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                    <div>
+                      <div className="font-mono text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(233,228,216,0.3)" }}>Current</div>
+                      <div className="font-['Special_Elite',_monospace] text-sm" style={{ color: "#E9E4D8" }}>${result.currentPrice.toLocaleString("en-US", { maximumFractionDigits: result.currentPrice < 1 ? 4 : result.currentPrice < 100 ? 2 : 0 })}</div>
                     </div>
+                    <div>
+                      <div className="font-mono text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(233,228,216,0.3)" }}>Target</div>
+                      <div className="font-['Special_Elite',_monospace] text-sm" style={{ color: result.direction === "LONG" ? "#39FF6E" : "#D03A2B" }}>${result.targetPrice.toLocaleString("en-US", { maximumFractionDigits: result.targetPrice < 1 ? 4 : result.targetPrice < 100 ? 2 : 0 })}</div>
+                    </div>
+                    <div>
+                      <div className="font-mono text-[10px] tracking-wider uppercase mb-1" style={{ color: "rgba(233,228,216,0.3)" }}>24h Change</div>
+                      <div className="font-['Special_Elite',_monospace] text-sm" style={{ color: result.change24h >= 0 ? "#39FF6E" : "#D03A2B" }}>{result.change24h >= 0 ? "+" : ""}{result.change24h.toFixed(2)}%</div>
+                    </div>
+                  </div>
 
-                    {/* Level 2 clearance banner — now a button */}
-                    <motion.button
-                      className="w-full p-4 flex items-center gap-3 cursor-pointer text-left transition-colors duration-200"
-                      style={{
-                        backgroundColor: "#0C0C0C",
-                        border: "1px solid rgba(208,58,43,0.3)",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(208,58,43,0.6)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(208,58,43,0.3)";
-                      }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={() => setWaitlistOpen(true)}
-                    >
-                      <div
-                        className="font-['Oswald',_sans-serif] text-xs tracking-[0.2em] uppercase shrink-0"
-                        style={{ color: "#D03A2B" }}
-                      >
-                        ████
-                      </div>
-                      <p
-                        className="font-mono text-xs"
-                        style={{ color: "rgba(233,228,216,0.5)" }}
-                      >
-                        FULL VERSION REQUIRES LEVEL 2 CLEARANCE. Upgrade to
-                        access unredacted analysis, price targets, and confidence
-                        intervals.
-                      </p>
+                  <div className="font-['Special_Elite',_monospace] text-sm leading-[1.8] mb-4" style={{ color: "rgba(233,228,216,0.5)" }}>
+                    <RedactionBar text={result.redactedSummary} />
+                  </div>
+
+                  <div className="font-['Special_Elite',_monospace] text-sm leading-[1.8] p-4" style={{ color: "rgba(233,228,216,0.7)", backgroundColor: "rgba(233,228,216,0.02)", border: "1px solid rgba(233,228,216,0.06)" }}>
+                    {result.summary}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="font-mono text-[10px]" style={{ color: "rgba(233,228,216,0.2)" }}>FULL VERSION REQUIRES LEVEL 2 CLEARANCE</div>
+                    <motion.button onClick={() => setWaitlistOpen(true)} className="font-['Oswald',_sans-serif] text-xs tracking-[0.2em] uppercase px-5 py-2.5 border cursor-pointer" style={{ borderColor: "#D03A2B", color: "#D03A2B", backgroundColor: "transparent" }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#D03A2B"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "#D03A2B"; }} whileTap={{ scale: 0.97 }}>
+                      REQUEST CLEARANCE
                     </motion.button>
-                  </motion.div>
-                )}
+                  </div>
+                </motion.div>
+              )}
 
-                {/* Empty state / selected dossier preview */}
-                {!loading && !result && (
-                  <motion.div
-                    key="empty"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {selectedDossier ? (
-                      <div>
-                        <div className="flex items-baseline gap-3 mb-1">
-                          <h2
-                            className="font-['Oswald',_sans-serif] text-2xl tracking-wider uppercase"
-                            style={{ color: "#2B2B2B" }}
-                          >
-                            {selectedDossier.codeName}
-                          </h2>
-                          <span
-                            className="font-mono text-xs"
-                            style={{ color: "#888" }}
-                          >
-                            {selectedDossier.asset}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 mb-4">
-                          <span
-                            className="font-mono text-xs"
-                            style={{ color: "#888" }}
-                          >
-                            {selectedDossier.id}
-                          </span>
-                          <CountdownTimer
-                            persistKey={selectedDossier.persistKey}
-                            targetHours={selectedDossier.hoursRemaining}
-                          />
-                        </div>
-                        <div
-                          className="w-full h-px mb-4"
-                          style={{ backgroundColor: "#c8c0b0" }}
-                        />
-                        <p
-                          className="font-['Special_Elite',_monospace] text-sm leading-relaxed"
-                          style={{ color: "#2B2B2B" }}
-                        >
-                          <RedactionBar
-                            text={selectedDossier.redactedPreview}
-                          />
-                        </p>
-                        <div
-                          className="mt-6 p-3 font-mono text-xs text-center"
-                          style={{
-                            backgroundColor: "rgba(208,58,43,0.06)",
-                            color: "#D03A2B",
-                            border: "1px dashed rgba(208,58,43,0.2)",
-                          }}
-                        >
-                          FULL DOSSIERS REQUIRE ACTIVE CLEARANCE
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-16">
-                        <div
-                          className="font-['Oswald',_sans-serif] text-lg tracking-[0.2em] uppercase mb-3"
-                          style={{ color: "#888" }}
-                        >
-                          NO DOSSIER SELECTED
-                        </div>
-                        <p
-                          className="font-['Special_Elite',_monospace] text-sm text-center max-w-sm"
-                          style={{ color: "#aaa" }}
-                        >
-                          Select an active dossier from the list, or task the
-                          Agency with an asset to generate a new briefing.
-                        </p>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              {!result && !loading && (
+                <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-6 text-center" style={{ backgroundColor: "#111", border: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div className="font-['Special_Elite',_monospace] text-sm" style={{ color: "rgba(233,228,216,0.2)" }}>
+                    SELECT AN ASSET TO GENERATE A BRIEFING.
+                    <br />
+                    <span style={{ color: "rgba(233,228,216,0.1)" }}>LIVE DATA · CRYPTO VIA COINGECKO · STOCKS VIA YAHOO FINANCE</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

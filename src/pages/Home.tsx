@@ -54,47 +54,47 @@ const DECLASSIFIED_THREE = [
   {
     id: "2026-0609-A",
     codeName: "SILENT VECTOR",
-    asset: "NVDA",
-    issuePrice: 128.5,
-    currentPrice: 136.72,
+    asset: "BTC",
+    issuePrice: 91400.0,
+    currentPrice: 97214.0,
     changePct: 6.4,
     outcome: "VERIFIED" as const,
     summary:
-      "Long position on NVIDIA ahead of Q4 earnings. AI datacenter demand surge projected to exceed consensus estimates by 18%.",
+      "Three dormant wallets, silent since 2021, absorbed 14,200 BTC across 48 hours using sub-threshold orders designed to evade exchange surveillance. Identical execution fingerprint last observed 11 days before the March rally. Funding rates remain neutral — the crowd has not noticed. Assessment: accumulation phase, late stage. Expected repricing window: 9–14 days.",
     redactedSummary:
-      "████████ position on ████ ahead of Q4 ███████. AI ██████████ demand surge projected to exceed ██████████ estimates by 18%.",
-    readersCount: 14203,
-    chartData: generatePriceData(128.5, 136.72),
-  },
-  {
-    id: "2026-0609-B",
-    codeName: "COLD FORK",
-    asset: "ETH",
-    issuePrice: 3450.0,
-    currentPrice: 1070.0,
-    changePct: -69.0,
-    outcome: "VERIFIED" as const,
-    summary:
-      "Short thesis on Ethereum L2 fee compression. Sequencer revenue collapsed as activity migrated to competing L1s.",
-    redactedSummary:
-      "Short thesis on ████████ L2 fee compression. ██████████ revenue collapsed as activity migrated to competing L1s.",
-    readersCount: 7654,
-    chartData: generatePriceData(3450, 1070),
+      "Three dormant wallets, silent since ████, absorbed ██,███ BTC across 48 hours using ████████████ orders designed to evade exchange surveillance. Identical execution fingerprint last observed ██ days before the ████ rally. Assessment: ████████ phase, ████ stage. Expected repricing window: █–██ days.",
+    readersCount: 2417,
+    chartData: generatePriceData(91400, 97214),
   },
   {
     id: "2026-0610-A",
-    codeName: "WRAITH KEY",
-    asset: "AMZN",
-    issuePrice: 186.4,
-    currentPrice: 204.85,
+    codeName: "THE TIDE GAUGE",
+    asset: "ETH",
+    issuePrice: 3540.0,
+    currentPrice: 3891.0,
     changePct: 9.9,
     outcome: "VERIFIED" as const,
     summary:
-      "AWS margin expansion driven by custom silicon (Graviton/Trainium). Operating income beat modeled scenario by 12%.",
+      "Stablecoin inflows to spot exchanges hit a 60-day high while ETH exchange reserves fell to a 2-year low. Dry powder is loading against shrinking supply. Options desks are pricing calm; on-chain disagrees. When dealers are wrong, the unwind is fuel. Assessment: upside dislocation within 5 sessions.",
     redactedSummary:
-      "███ margin expansion driven by custom silicon (████████/████████). Operating income beat modeled scenario by 12%.",
-    readersCount: 15890,
-    chartData: generatePriceData(186.4, 204.85),
+      "Stablecoin inflows to spot exchanges hit a 60-day high while ████ exchange reserves fell to a 2-year low. Dry powder is loading against shrinking supply. Options desks are pricing calm; on-chain disagrees. Assessment: upside dislocation within 5 sessions.",
+    readersCount: 2389,
+    chartData: generatePriceData(3540, 3891),
+  },
+  {
+    id: "2026-0611-A",
+    codeName: "INSIDER CLOCK",
+    asset: "SOL",
+    issuePrice: 87.0,
+    currentPrice: 270.0,
+    changePct: 212.0,
+    outcome: "VERIFIED" as const,
+    summary:
+      "Token unlock scheduled in 6 days, yet insider wallets are buying, not hedging — 14 wallets linked to the founding team added 2.1% of supply via OTC. Insiders buying their own unlock is the rarest signal in this market. They know what ships. Assessment: announcement-grade catalyst before unlock date.",
+    redactedSummary:
+      "Token unlock scheduled in 6 days, yet insider wallets are buying, not hedging — 14 wallets linked to the founding team added 2.1% of supply via OTC. Insiders buying their own unlock is the rarest signal in this market. Assessment: announcement-grade catalyst before unlock date.",
+    readersCount: 2440,
+    chartData: generatePriceData(87, 270),
   },
 ];
 
