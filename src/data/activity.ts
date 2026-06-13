@@ -1,52 +1,21 @@
-export interface ActivityEntry {
-  id: number;
-  agent: string;
-  action: string;
-  target: string;
-  timestamp: string;
-}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// AGENT ACTIVITY TICKER — Rotating social proof
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const activityTicker: readonly ActivityEntry[] = [
-  {
-    id: 1,
-    agent: "SPECTRE-7",
-    action: "updated dossier",
-    target: "DSR-003 / IRON MERIDIAN",
-    timestamp: "14:22:05",
-  },
-  {
-    id: 2,
-    agent: "WRAITH-3",
-    action: "flagged intercept",
-    target: "SWIFT ORION-7",
-    timestamp: "14:23:18",
-  },
-  {
-    id: 3,
-    agent: "CIPHER-12",
-    action: "decrypted payload",
-    target: "NODE 14.275 MHz",
-    timestamp: "14:24:41",
-  },
-  {
-    id: 4,
-    agent: "NOMAD-1",
-    action: "archived dossier",
-    target: "DSR-002 / GLASS ORACLE",
-    timestamp: "14:25:55",
-  },
-  {
-    id: 5,
-    agent: "ECHO-9",
-    action: "cross-referenced",
-    target: "dark pool prints ↔ options flow",
-    timestamp: "14:27:03",
-  },
-  {
-    id: 6,
-    agent: "VECTOR-4",
-    action: "initiated sweep",
-    target: "shell entity network (Cayman)",
-    timestamp: "14:28:37",
-  },
-] as const;
+export const agentActivity: string[] = [
+  "AGENT #4821 UPGRADED TO LEVEL 2 · 14 MIN AGO",
+  "AGENT #1107 READ DOSSIER 2026-0613-A · 2 MIN AGO",
+  "WAITLIST POSITION #312 CLAIMED · 6 MIN AGO",
+  "AGENT #2940 SET TRIPWIRE ON ████ · 9 MIN AGO",
+  "AGENT #0387 RENEWED CLEARANCE · LEVEL 3 · 21 MIN AGO",
+  "DOSSIER 2026-0613-A MARKED VERIFIED +212% · 1 HR AGO",
+  "AGENT #5502 JOINED WAITLIST · 3 MIN AGO",
+  "AGENT #7781 READ DOSSIER 2026-0613-B · 7 MIN AGO",
+  "AGENT #3344 UPGRADED TO LEVEL 2 · 18 MIN AGO",
+  "DOSSIER 2026-0613-C DECLASSIFIED · 2 HR AGO",
+  "AGENT #9901 SET WATCHLIST ON ████ · 5 MIN AGO",
+  "AGENT #1122 EXPORTED DOSSIER PDF · 11 MIN AGO",
+  "WAITLIST POSITION #313 CLAIMED · 4 MIN AGO",
+  "AGENT #6677 READ DOSSIER 2026-0613-D · 15 MIN AGO",
+  "DOSSIER 2026-0613-E MARKED BURNED · 3 HR AGO",
+];

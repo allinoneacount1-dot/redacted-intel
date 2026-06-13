@@ -19,12 +19,12 @@ import AgentTicker from "../components/AgentTicker";
 import CountdownTimer from "../components/CountdownTimer";
 import StampBadge from "../components/StampBadge";
 
-import { intercepts } from "../data/intercepts";
+import { interceptFeed } from "../data/intercepts";
 import WaitlistModal from "../components/WaitlistModal";
 import Toast from "../components/Toast";
 import type { ToastType } from "../components/Toast";
 
-import { activityTicker } from "../data/activity";
+import { agentActivity } from "../data/activity";
 import { useLivePrice, getLivePriceForSymbol } from "../hooks/useLivePrice";
 import { updateSEO, SEO_PAGES } from "../utils/seo";
  
@@ -105,6 +105,7 @@ const HERO_DOSSIER = {
   codeName: "PALE HORIZON",
   issuedAt: "2026-06-12",
   asset: "BTC",
+  assetName: "Bitcoin",
   issuePrice: 71200.0,
   currentPrice: 68400.0,
   changePct: -3.93,
@@ -674,9 +675,7 @@ function LiveInterceptsSection() {
   const isInView = useInView(ref, { once: true, margin: "-80px" });
   const prefersReduced = usePrefersReducedMotion();
 
-  const interceptLines = intercepts.map((i) =>
-    i.line.replace(/\x1b\[32m/g, "").replace(/\x1b\[0m/g, "")
-  );
+  const interceptLines = interceptFeed;
 
   return (
     <section
@@ -922,9 +921,7 @@ function ClearanceSection({ onRequestClearance }: { onRequestClearance: (level: 
    ═══════════════════════════════════════════════════════════════ */
 
 function AgentActivityStrip() {
-  const tickerItems = activityTicker.map(
-    (a) => `${a.agent} — ${a.action} ${a.target} [${a.timestamp}]`
-  );
+  const tickerItems = agentActivity;
 
   return (
     <div

@@ -28,132 +28,10 @@ function generateChartData(issuePrice: number, currentPrice: number, points = 10
 
 /* ─── extended dossier list (14+ items) ─── */
 
-const EXTENDED_DOSSIERS = [
-  ...dossiers.map((d) => ({
+const ARCHIVE_DOSSIERS = dossiers.map((d) => ({
     ...d,
     chartData: generateChartData(d.issuePrice, d.currentPrice),
-  })),
-  // Additional dossiers to reach 14+
-  {
-    id: "DSR-011",
-    codeName: "GHOST LINE",
-    issuedAt: "2025-06-15",
-    asset: "MSFT",
-    issuePrice: 440.0,
-    currentPrice: 478.5,
-    changePct: 8.75,
-    confidence: 76,
-    outcome: "VERIFIED" as const,
-    summary:
-      "Microsoft Copilot enterprise adoption accelerating. Revenue per user up 34% YoY across commercial cloud segment.",
-    redactedSummary:
-      "████████ ██████ enterprise adoption accelerating. Revenue per user up 34% YoY across commercial cloud segment.",
-    readersCount: 9340,
-    chartData: generateChartData(440, 478.5),
-  },
-  {
-    id: "DSR-012",
-    codeName: "IRON VEIL",
-    issuedAt: "2025-06-22",
-    asset: "LLY",
-    issuePrice: 850.0,
-    currentPrice: 798.0,
-    changePct: -6.12,
-    confidence: 52,
-    outcome: "BURNED" as const,
-    summary:
-      "GLP-1 pricing pressure from generic entrants. Tirzepatide market share erosion faster than modeled.",
-    redactedSummary:
-      "████ pricing pressure from generic entrants. ██████████ market share erosion faster than modeled.",
-    readersCount: 5120,
-    chartData: generateChartData(850, 798),
-  },
-  {
-    id: "DSR-013",
-    codeName: "DUSK ANCHOR",
-    issuedAt: "2025-07-01",
-    asset: "GOOGL",
-    issuePrice: 172.0,
-    currentPrice: 191.4,
-    changePct: 11.28,
-    confidence: 81,
-    outcome: "VERIFIED" as const,
-    summary:
-      "Google Search revenue resilience despite AI overview rollout. Ad click-through rates stable. Cloud backlog growing.",
-    redactedSummary:
-      "██████ Search revenue resilience despite AI overview rollout. Ad click-through rates stable. Cloud backlog growing.",
-    readersCount: 16780,
-    chartData: generateChartData(172, 191.4),
-  },
-  {
-    id: "DSR-014",
-    codeName: "ASH PROTOCOL",
-    issuedAt: "2025-07-10",
-    asset: "META",
-    issuePrice: 485.0,
-    currentPrice: 442.0,
-    changePct: -8.87,
-    confidence: 48,
-    outcome: "BURNED" as const,
-    summary:
-      "Meta Reality Labs spend efficiency thesis failed. Operating losses widened despite revenue growth in core segments.",
-    redactedSummary:
-      "████ Reality Labs spend efficiency thesis failed. Operating losses widened despite revenue growth in core segments.",
-    readersCount: 8920,
-    chartData: generateChartData(485, 442),
-  },
-  {
-    id: "DSR-015",
-    codeName: "NULL RANGE",
-    issuedAt: "2025-07-18",
-    asset: "AMD",
-    issuePrice: 155.0,
-    currentPrice: 178.2,
-    changePct: 14.97,
-    confidence: 85,
-    outcome: "VERIFIED" as const,
-    summary:
-      "AMD MI300X datacenter GPU revenue ramp. Hyperscaler design wins accelerating. Market share gain against incumbent expected.",
-    redactedSummary:
-      "████ ████████ datacenter ████ revenue ramp. ██████████ design wins accelerating. Market share gain against incumbent expected.",
-    readersCount: 19450,
-    chartData: generateChartData(155, 178.2),
-  },
-  {
-    id: "DSR-016",
-    codeName: "GLASS TOWER",
-    issuedAt: "2025-07-25",
-    asset: "JPM",
-    issuePrice: 198.0,
-    currentPrice: 212.5,
-    changePct: 7.32,
-    confidence: 70,
-    outcome: "VERIFIED" as const,
-    summary:
-      "JPMorgan net interest income stabilization. Loan loss reserves adequate. Investment banking fee recovery in H2.",
-    redactedSummary:
-      "████████ net interest income stabilization. Loan loss reserves adequate. Investment banking fee recovery in H2.",
-    readersCount: 7830,
-    chartData: generateChartData(198, 212.5),
-  },
-  {
-    id: "DSR-017",
-    codeName: "STATIC FIELD",
-    issuedAt: "2025-08-02",
-    asset: "XOM",
-    issuePrice: 112.0,
-    currentPrice: 104.8,
-    changePct: -6.43,
-    confidence: 44,
-    outcome: "BURNED" as const,
-    summary:
-      "Exxon production growth thesis offset by crude price compression. Permian basin output flat quarter over quarter.",
-    redactedSummary:
-      "█████ production growth thesis offset by crude price compression. ██████ basin output flat quarter over quarter.",
-    readersCount: 4560,
-    chartData: generateChartData(112, 104.8),
-  },
-];
+  }));
 
 /* ═══════════════════════════════════════════════════════════════
    DECLASSIFIED ARCHIVE PAGE
@@ -168,7 +46,7 @@ export default function DeclassifiedArchive() {
   });
 
   const filtered = useMemo(() => {
-    let list = [...EXTENDED_DOSSIERS];
+    let list = [...ARCHIVE_DOSSIERS];
 
     if (filter === "verified") {
       list = list.filter((d) => d.outcome === "VERIFIED");
@@ -183,10 +61,10 @@ export default function DeclassifiedArchive() {
   }, [filter]);
 
   // Stats
-  const verifiedCount = EXTENDED_DOSSIERS.filter(
+  const verifiedCount = ARCHIVE_DOSSIERS.filter(
     (d) => d.outcome === "VERIFIED"
   ).length;
-  const totalCount = EXTENDED_DOSSIERS.length;
+  const totalCount = ARCHIVE_DOSSIERS.length;
   const accuracy = ((verifiedCount / totalCount) * 100).toFixed(1);
 
   return (
@@ -257,7 +135,7 @@ export default function DeclassifiedArchive() {
               className="font-mono text-xs"
               style={{ color: "rgba(233,228,216,0.3)" }}
             >
-              {EXTENDED_DOSSIERS.filter((d) => d.outcome === "BURNED").length}{" "}
+              {ARCHIVE_DOSSIERS.filter((d) => d.outcome === "BURNED").length}{" "}
               BURNED
             </span>
           </div>
@@ -323,7 +201,7 @@ function DossierArchiveCard({
   dossier: d,
   index,
 }: {
-  dossier: (typeof EXTENDED_DOSSIERS)[number];
+  dossier: (typeof ARCHIVE_DOSSIERS)[number];
   index: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);

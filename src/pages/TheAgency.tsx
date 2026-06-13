@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
-import { MANIFESTO } from "../data/manifesto";
+import { manifesto } from "../data/manifesto";
 import WaitlistModal from "../components/WaitlistModal";
 import { updateSEO, SEO_PAGES } from "../utils/seo";
 
@@ -22,7 +22,7 @@ export default function TheAgency() {
   }, []);
 
   // Split manifesto into paragraphs for rendering
-  const paragraphs = MANIFESTO.split("\n\n");
+  const paragraphs = manifesto.paragraphs;
 
   return (
     <div

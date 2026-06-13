@@ -1,48 +1,27 @@
-export interface Intercept {
-  id: number;
-  timestamp: string;
-  line: string;
-}
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LIVE INTERCEPT FEED — Phosphor green CRT stream
+// Rotating mock intercepts with redacted fields
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const intercepts: readonly Intercept[] = [
-  {
-    id: 1,
-    timestamp: "23:41:07",
-    line: "\x1b[32m[INTERCEPT] Signal acquired — anomalous options flow detected in NVDA 0DTE chain. Volume spike 4.2σ above mean.\x1b[0m",
-  },
-  {
-    id: 2,
-    timestamp: "23:42:15",
-    line: "\x1b[32m[INTERCEPT] Dark pool print: 45,000 shares PLTR @ $81.20. Block crossed on IEX. Buyer identity masked.\x1b[0m",
-  },
-  {
-    id: 3,
-    timestamp: "23:43:33",
-    line: "\x1b[32m[INTERCEPT] Wire transfer flagged — $2.4M routed through 3 shell entities. Origin: Cayman Islands. Destination: Zürich.\x1b[0m",
-  },
-  {
-    id: 4,
-    timestamp: "23:44:58",
-    line: "\x1b[32m[INTERCEPT] Encrypted comms intercepted. Frequency 14.275 MHz. Decryption ETA 6m 12s. Origin node: [REDACTED].\x1b[0m",
-  },
-  {
-    id: 5,
-    timestamp: "23:46:22",
-    line: "\x1b[32m[INTERCEPT] Insider filing anomaly — CEO disposition of 12% holdings filed 47 minutes post-close. Pattern matches prior events.\x1b[0m",
-  },
-  {
-    id: 6,
-    timestamp: "23:47:41",
-    line: "\x1b[32m[INTERCEPT] Satellite imagery update: cargo vessel deviated from planned route. Last known position 34.0522°N, 118.2437°W.\x1b[0m",
-  },
-  {
-    id: 7,
-    timestamp: "23:49:03",
-    line: "\x1b[32m[INTERCEPT] Social sentiment divergence detected. Retail bullishness at 87% while institutional positioning net short. Contrarian signal active.\x1b[0m",
-  },
-  {
-    id: 8,
-    timestamp: "23:50:19",
-    line: "\x1b[32m[INTERCEPT] Cross-border SWIFT message intercepted. Reference code: ORION-7. Contents partially encrypted. Flagging for analysis.\x1b[0m",
-  },
-] as const;
+export const interceptFeed: string[] = [
+  "23:41:07 > WHALE TRANSFER · ASSET: ████ · SIZE: ██,███ · DEST: COLD STORAGE",
+  "23:42:51 > FUNDING ANOMALY · ████ · DIRECTION: ████ · CONF: 88%",
+  "23:44:13 > SOCIAL SPIKE +212% · ████ · SMART MONEY: EXITING",
+  "23:45:02 > LIQUIDATION CLUSTER MAPPED · ████ AT $███ · DEPTH: HIGH",
+  "23:46:38 > DORMANT WALLET REACTIVATED · AGE: █ YEARS · ACTION: ████",
+  "23:47:55 > OTC BLOCK DETECTED · ██,███ ████ · COUNTERPARTY: ████████",
+  "23:49:21 > CONTRACT DEPLOYED · TEAM: ████████ · INTERFACE: ████",
+  "23:50:44 > EXCHANGE RESERVES -3.1% IN 24H · ASSET: ████",
+  "23:51:12 > OPTIONS GAMMA WALL · ████ AT $███ · EXPIRY: ██ HRS",
+  "23:52:33 > STABLECOIN MINT · ███M ████ · SOURCE: ████████",
+  "23:53:47 > BRIDGE FLOW · ██,███ ████ · FROM: ████ TO: ████",
+  "23:55:01 > INSIDER WALLET · ████ TEAM · ACTION: ██████ · SIZE: ███K",
+  "23:56:18 > PERP OI SURGE · ████ · +██% IN 1H · FUNDING: ████",
+  "23:57:42 > TOKEN UNLOCK · ███M ████ · IN ██ HOURS · WALLETS: ██",
+  "23:58:59 > SENTIMENT EXTREME · ████ · GREED: ██/100 · DIVERGENCE: ████",
+  "00:00:15 > CEX OUTFLOW · ██,███ ████ · EXCHANGE: ██████ · DEST: ████",
+  "00:01:32 > MEV BUNDLE · ████ SANDWICH · PROFIT: ██ ████ · BLOCK: ██████",
+  "00:02:48 > GOVERNANCE VOTE · ████ · PROPOSAL: ██ · OUTCOME: ██████",
+  "00:04:05 > RWA TOKENIZATION · $██M ████ · ISSUER: ████████",
+  "00:05:22 > AI AGENT TRADE · ████ · STRATEGY: ████ · P&L: +██%",
+];
