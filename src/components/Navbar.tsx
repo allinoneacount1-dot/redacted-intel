@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import WaitlistModal from "./WaitlistModal";
 import WalletButton from "./WalletButton";
 
 const NAV_LINKS = [
-  { label: "Briefing Room", href: "#briefing" },
-  { label: "Declassified", href: "#declassified", },
-  { label: "Clearance", href: "#clearance" },
-  { label: "The Agency", href: "#agency" },
+  { label: "Briefing Room", to: "/briefing" },
+  { label: "Declassified", to: "/declassified" },
+  { label: "The Agency", to: "/agency" },
 ];
 
 export default function Navbar() {
@@ -31,8 +31,8 @@ export default function Navbar() {
         aria-label="Main navigation"
       >
         {/* Logo */}
-        <a
-          href="#"
+        <Link
+          to="/"
           className="relative inline-flex items-center gap-0 font-['Oswald',_sans-serif] text-base tracking-[0.25em] uppercase"
           style={{ color: "#E9E4D8" }}
           aria-label="Home"
@@ -57,14 +57,14 @@ export default function Navbar() {
             />
           </span>
           <span>]</span>
-        </a>
+        </Link>
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-6">
           {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
+            <Link
+              key={link.to}
+              to={link.to}
               className="font-mono text-xs tracking-wider uppercase transition-colors duration-200"
               style={{ color: "rgba(233,228,216,0.5)" }}
               onMouseEnter={(e) => {
@@ -75,7 +75,7 @@ export default function Navbar() {
               }}
             >
               {link.label}
-            </a>
+            </Link>
           ))}
 
           <WalletButton />
@@ -147,15 +147,15 @@ export default function Navbar() {
               transition={{ duration: 0.2 }}
             >
               {NAV_LINKS.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
+                <Link
+                  key={link.to}
+                  to={link.to}
                   className="font-mono text-sm tracking-wider uppercase"
                   style={{ color: "rgba(233,228,216,0.6)" }}
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
               <WalletButton />
               <button

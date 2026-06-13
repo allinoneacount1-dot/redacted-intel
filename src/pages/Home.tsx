@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, useInView } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   LineChart,
   Line,
@@ -1038,8 +1039,8 @@ function FooterSection() {
           </div>
 
           <div className="flex items-center gap-6">
-            <a
-              href="#declassified"
+            <Link
+              to="/declassified"
               className="font-mono text-xs tracking-wider uppercase"
               style={{ color: "rgba(233,228,216,0.3)" }}
               onMouseEnter={(e) => {
@@ -1050,9 +1051,9 @@ function FooterSection() {
               }}
             >
               Declassified
-            </a>
-            <a
-              href="#clearance"
+            </Link>
+            <Link
+              to="/briefing"
               className="font-mono text-xs tracking-wider uppercase"
               style={{ color: "rgba(233,228,216,0.3)" }}
               onMouseEnter={(e) => {
@@ -1063,9 +1064,9 @@ function FooterSection() {
               }}
             >
               Clearance
-            </a>
-            <a
-              href="#how-it-works"
+            </Link>
+            <Link
+              to="/agency"
               className="font-mono text-xs tracking-wider uppercase"
               style={{ color: "rgba(233,228,216,0.3)" }}
               onMouseEnter={(e) => {
@@ -1076,7 +1077,7 @@ function FooterSection() {
               }}
             >
               The Agency
-            </a>
+            </Link>
           </div>
         </div>
 
