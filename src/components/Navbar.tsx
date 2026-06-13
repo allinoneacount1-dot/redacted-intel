@@ -5,6 +5,7 @@ import WaitlistModal from "./WaitlistModal";
 import WalletButton from "./WalletButton";
 
 const NAV_LINKS = [
+  { label: "Home", to: "/" },
   { label: "Briefing Room", to: "/briefing" },
   { label: "Declassified", to: "/declassified" },
   { label: "The Agency", to: "/agency" },
