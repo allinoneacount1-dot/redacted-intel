@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import {
   LineChart,
@@ -42,9 +42,9 @@ export default function DeclassifiedArchive() {
   const [filter, setFilter] = useState<FilterType>("all");
 
   // SEO
-  useState(() => {
+  useEffect(() => {
     updateSEO(SEO_PAGES.declassified);
-  });
+  }, []);
 
   const filtered = useMemo(() => {
     let list = [...ARCHIVE_DOSSIERS];

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -211,9 +211,9 @@ export default function Home() {
   const { prices: livePrices, lastUpdated, isLive } = useLivePrice();
 
   // SEO
-  useState(() => {
+  useEffect(() => {
     updateSEO(SEO_PAGES.home);
-  });
+  }, []);
  
   const openWaitlist = useCallback((level?: 1 | 2 | 3) => {
     setWaitlistLevel(level ?? null);
